@@ -2,10 +2,13 @@
 pandas>=2.0.0
 numpy>=1.24.0
 
-# --- Technical analysis (pure Python, no C-library compile needed) ---
-pandas-ta>=0.3.14b0
+# NOTE: RSI/EMA/SMA are implemented directly in indicators.py using only
+# pandas — no pandas-ta dependency. pandas-ta was removed from PyPI (Sept
+# 2025) after an ownership transfer and community reports questioning it
+# as a possible supply-chain risk. Don't re-add it or a "successor"
+# package without checking its current trust status first.
 
-# --- HTTP requests (Binance REST, Telegram, Discord) ---
+# --- HTTP requests (Binance REST, Telegram, Discord, ntfy) ---
 requests>=2.31.0
 
 # --- Free, keyless-ish equity/FX/commodity data (used for XAU/USD) ---
