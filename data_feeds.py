@@ -30,7 +30,12 @@ import config
 
 log = logging.getLogger(__name__)
 
-BINANCE_REST_BASE = "https://api.binance.com"
+BINANCE_REST_BASE = "https://data-api.binance.vision"
+# NOTE: was api.binance.com, but GitHub Actions runners are hosted on
+# US-based servers, and api.binance.com blocks US-origin requests for
+# regulatory reasons (HTTP 451). data-api.binance.vision is Binance's
+# market-data-only mirror — same response shape, no geo-block, no
+# authentication needed either way.
 BINANCE_WS_BASE = "wss://stream.binance.com:9443/ws"
 
 
