@@ -1,0 +1,18 @@
+# --- Core data handling ---
+pandas>=2.0.0
+numpy>=1.24.0
+
+# --- Technical analysis (pure Python, no C-library compile needed) ---
+pandas-ta>=0.3.14b0
+
+# --- HTTP requests (Binance REST, Telegram, Discord) ---
+requests>=2.31.0
+
+# --- Free, keyless-ish equity/FX/commodity data (used for XAU/USD) ---
+yfinance>=0.2.40
+
+# --- Env var management for local dev (.env file) ---
+python-dotenv>=1.0.0
+
+# --- Optional: only needed if you run the CONTINUOUS websocket mode ---
+websocket-client>=1.7.0
