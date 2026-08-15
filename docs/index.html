@@ -41,8 +41,22 @@
   .tab-btn.active { background: #0d1117; border-bottom-color: #0d1117; color: #58a6ff; }
 
   .panel { padding: 0 20px 20px 20px; }
-  .legend { display: flex; gap: 16px; font-size: 12px; color: #8b949e; padding: 10px 0; flex-wrap: wrap; }
+  .legend { display: flex; gap: 16px; font-size: 12px; color: #8b949e; padding: 10px 0; flex-wrap: wrap; align-items: center; }
   .legend span.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+
+  .live-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+    padding: 3px 8px; border-radius: 10px;
+    background: rgba(63,185,80,0.15); color: #3fb950;
+  }
+  .live-badge .pulse {
+    width: 6px; height: 6px; border-radius: 50%; background: #3fb950;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .live-badge.off { background: rgba(139,148,158,0.15); color: #8b949e; }
+  .live-badge.off .pulse { animation: none; background: #8b949e; }
 
   #price-chart { height: 420px; border: 1px solid #21262d; border-radius: 6px; }
   #rsi-chart   { height: 140px; border: 1px solid #21262d; border-top: none; border-radius: 0 0 6px 6px; }
@@ -69,6 +83,9 @@
     <span><span class="dot" style="background:#e3b341"></span>MA</span>
     <span><span class="dot" style="background:#58a6ff"></span>RSI</span>
     <span id="config-line"></span>
+    <span id="live-badge" class="live-badge off" style="display:none;">
+      <span class="pulse"></span><span id="live-price-text">connecting…</span>
+    </span>
   </div>
   <div id="price-chart"></div>
   <div id="rsi-chart"></div>
@@ -110,7 +127,6 @@ function makeCharts() {
   });
   rsiSeries = rsiChart.addLineSeries({ color: "#58a6ff", lineWidth: 2 });
 
-  // Sync the two charts' visible time range together
   priceChart.timeScale().subscribeVisibleLogicalRangeChange(range => {
     if (range) rsiChart.timeScale().setVisibleLogicalRange(range);
   });
@@ -130,7 +146,6 @@ async function loadData(symbolKey) {
   const updatedEl = document.getElementById("updated");
 
   try {
-    // cache-bust so the browser always pulls the freshest committed JSON
     const resp = await fetch(`./${filename}?t=${Date.now()}`);
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json();
@@ -149,9 +164,6 @@ async function loadData(symbolKey) {
     maSeries.setData(maData);
     rsiSeries.setData(rsiData);
 
-    // RSI overbought/oversold reference lines — remove any previous ones
-    // first, since this function re-runs every 60s and createPriceLine()
-    // would otherwise stack a new pair of lines on every refresh.
     if (overboughtLine) rsiSeries.removePriceLine(overboughtLine);
     if (oversoldLine) rsiSeries.removePriceLine(oversoldLine);
     overboughtLine = rsiSeries.createPriceLine({ price: data.rsi_overbought, color: "#f85149", lineStyle: 2, lineWidth: 1, title: "overbought" });
@@ -178,16 +190,91 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
     currentSymbol = btn.dataset.symbol;
-    // Actually remove the old symbol's reference lines (not just forget
-    // them) before loading the new symbol's data into the same series.
     if (overboughtLine) { rsiSeries.removePriceLine(overboughtLine); overboughtLine = null; }
     if (oversoldLine) { rsiSeries.removePriceLine(oversoldLine); oversoldLine = null; }
     loadData(currentSymbol);
+    updateLiveFeed();
   });
 });
 
+// ---------------------------------------------------------------------------
+// LIVE TICK-BY-TICK BTC (browser connects directly to Binance's public
+// WebSocket — no backend involved, works purely because the visitor's own
+// browser makes this connection). Gold has no free tick-level feed, so this
+// only ever runs for the BTC tab; the RSI/MA lines still only update on the
+// ~5-minute JSON refresh, same as before — this just makes the rightmost
+// candle move live between those refreshes.
+// ---------------------------------------------------------------------------
+const BTC_INTERVAL = "15m"; // keep in sync with config.CANDLE_INTERVAL on the Python side
+let btcSocket = null;
+
+function connectBtcLiveFeed() {
+  if (btcSocket) return;
+
+  const badge = document.getElementById("live-badge");
+  const priceText = document.getElementById("live-price-text");
+  badge.style.display = "inline-flex";
+  badge.classList.add("off");
+  priceText.textContent = "connecting…";
+
+  try {
+    btcSocket = new WebSocket(`wss://stream.binance.com:9443/ws/btcusdt@kline_${BTC_INTERVAL}`);
+
+    btcSocket.onopen = () => {
+      badge.classList.remove("off");
+    };
+
+    btcSocket.onmessage = (event) => {
+      const payload = JSON.parse(event.data);
+      const k = payload.k;
+      if (!k) return;
+
+      candleSeries.update({
+        time: Math.floor(k.t / 1000),
+        open: parseFloat(k.o), high: parseFloat(k.h),
+        low: parseFloat(k.l), close: parseFloat(k.c),
+      });
+
+      priceText.textContent = `$${parseFloat(k.c).toLocaleString(undefined, {maximumFractionDigits: 2})}`;
+    };
+
+    btcSocket.onerror = () => {
+      badge.classList.add("off");
+      priceText.textContent = "connection error";
+    };
+
+    btcSocket.onclose = () => {
+      badge.classList.add("off");
+      priceText.textContent = "disconnected";
+      btcSocket = null;
+    };
+  } catch (err) {
+    badge.classList.add("off");
+    priceText.textContent = "unavailable";
+  }
+}
+
+function disconnectBtcLiveFeed() {
+  if (btcSocket) {
+    btcSocket.close();
+    btcSocket = null;
+  }
+  document.getElementById("live-badge").style.display = "none";
+}
+
+function updateLiveFeed() {
+  if (currentSymbol === "btc") {
+    connectBtcLiveFeed();
+  } else {
+    disconnectBtcLiveFeed();
+  }
+}
+
+window.addEventListener("beforeunload", disconnectBtcLiveFeed);
+
 makeCharts();
 loadData(currentSymbol);
+updateLiveFeed();
 setInterval(() => loadData(currentSymbol), REFRESH_MS);
 </script>
 
