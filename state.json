@@ -7,5 +7,69 @@
     "rsi_oversold_bullish_ma_cross": false,
     "rsi_overbought_bearish_ma_cross": false,
     "mt5_level_cross::H1 Horizontal Line 45896": false
+  },
+  "BTC/USDT|1m": {
+    "rsi_oversold_bullish_ma_cross": false,
+    "rsi_overbought_bearish_ma_cross": false
+  },
+  "BTC/USDT|3m": {
+    "rsi_oversold_bullish_ma_cross": false,
+    "rsi_overbought_bearish_ma_cross": false
+  },
+  "BTC/USDT|5m": {
+    "rsi_oversold_bullish_ma_cross": false,
+    "rsi_overbought_bearish_ma_cross": false
+  },
+  "BTC/USDT|15m": {
+    "rsi_oversold_bullish_ma_cross": false,
+    "rsi_overbought_bearish_ma_cross": false
+  },
+  "BTC/USDT|30m": {
+    "rsi_oversold_bullish_ma_cross": false,
+    "rsi_overbought_bearish_ma_cross": false
+  },
+  "BTC/USDT|1h": {
+    "rsi_oversold_bullish_ma_cross": false,
+    "rsi_overbought_bearish_ma_cross": false
+  },
+  "BTC/USDT|4h": {
+    "rsi_oversold_bullish_ma_cross": false,
+    "rsi_overbought_bearish_ma_cross": false
+  },
+  "BTC/USDT|1d": {
+    "rsi_oversold_bullish_ma_cross": false,
+    "rsi_overbought_bearish_ma_cross": false
+  },
+  "XAU/USD|1m": {
+    "rsi_oversold_bullish_ma_cross": false,
+    "rsi_overbought_bearish_ma_cross": false
+  },
+  "XAU/USD|3m": {
+    "rsi_oversold_bullish_ma_cross": false,
+    "rsi_overbought_bearish_ma_cross": false
+  },
+  "XAU/USD|5m": {
+    "rsi_oversold_bullish_ma_cross": false,
+    "rsi_overbought_bearish_ma_cross": false
+  },
+  "XAU/USD|15m": {
+    "rsi_oversold_bullish_ma_cross": false,
+    "rsi_overbought_bearish_ma_cross": false
+  },
+  "XAU/USD|30m": {
+    "rsi_oversold_bullish_ma_cross": false,
+    "rsi_overbought_bearish_ma_cross": false
+  },
+  "XAU/USD|1h": {
+    "rsi_oversold_bullish_ma_cross": false,
+    "rsi_overbought_bearish_ma_cross": false
+  },
+  "XAU/USD|4h": {
+    "rsi_oversold_bullish_ma_cross": false,
+    "rsi_overbought_bearish_ma_cross": false
+  },
+  "XAU/USD|1d": {
+    "rsi_oversold_bullish_ma_cross": false,
+    "rsi_overbought_bearish_ma_cross": false
   }
 }
