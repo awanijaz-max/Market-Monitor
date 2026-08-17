@@ -39,9 +39,22 @@ def read_levels(path: str = None) -> list:
     try:
         with open(path, "r") as f:
             payload = json.load(f)
-        return payload.get("levels", [])
+        levels = payload.get("levels", [])
     except (json.JSONDecodeError, OSError) as e:
         # Most likely caught the file mid-write by the EA (it re-writes
         # every RefreshSeconds) — just skip this run, next poll will work.
         log.debug("Could not read levels file this run (probably mid-write): %s", e)
         return []
+
+    # Defensive filter (belt-and-suspenders alongside the same filter in
+    # LevelExporter.mq5): MT5 auto-generates trade-history marker objects
+    # that look like trendlines but aren't real drawn levels — their name
+    # contains "->" and/or "#", and their price is always 0. Skip those
+    # here too, in case an older/un-updated EA build is still exporting
+    # them, so this fixes itself without requiring a recompile.
+    filtered = [
+        lvl for lvl in levels
+        if "->" not in lvl.get("name", "")
+        and abs(lvl.get("price", 0)) > 0.00001
+    ]
+    return filtered
